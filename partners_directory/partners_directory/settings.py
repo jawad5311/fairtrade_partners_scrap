@@ -7,6 +7,12 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+# Color-Log imports
+import copy
+from colorlog import ColoredFormatter
+import scrapy.utils.log
+
+
 BOT_NAME = 'partners_directory'
 
 SPIDER_MODULES = ['partners_directory.spiders']
@@ -91,3 +97,32 @@ HTTPCACHE_ENABLED = True
 #HTTPCACHE_DIR = 'httpcache'
 HTTPCACHE_IGNORE_HTTP_CODES = [503, 504, 505, 500, 400, 401, 402, 403, 404]
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+# Color Log settings
+color_formatter = ColoredFormatter(
+    (
+        '%(log_color)s%(levelname)-5s%(reset)s '
+        '%(yellow)s[%(asctime)s]%(reset)s'
+        '%(white)s %(name)s %(funcName)s %(bold_purple)s:%(lineno)d%(reset)s '
+        '%(log_color)s%(message)s%(reset)s'
+    ),
+    datefmt='%y-%m-%d %H:%M:%S',
+    log_colors={
+        'DEBUG': 'green',
+        'INFO': 'bold_cyan',
+        'WARNING': 'red',
+        'ERROR': 'bg_bold_red',
+        'CRITICAL': 'red,bg_white',
+    }
+)
+
+_get_handler = copy.copy(scrapy.utils.log._get_handler)
+
+
+def _get_handler_custom(*args, **kwargs):
+    handler = _get_handler(*args, **kwargs)
+    handler.setFormatter(color_formatter)
+    return handler
+
+
+scrapy.utils.log._get_handler = _get_handler_custom
