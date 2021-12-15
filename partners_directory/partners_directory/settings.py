@@ -12,6 +12,10 @@ BOT_NAME = 'partners_directory'
 SPIDER_MODULES = ['partners_directory.spiders']
 NEWSPIDER_MODULE = 'partners_directory.spiders'
 
+# Selenium Webdriver Settings
+SELENIUM_DRIVER_NAME = 'chrome'
+SELENIUM_DRIVER_EXECUTABLE_PATH = '"E:\webdriver\chromedriver.exe"'
+SELENIUM_DRIVER_ARGUMENTS = ['--headless']
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'partners_directory (+http://www.yourdomain.com)'
@@ -50,9 +54,10 @@ DOWNLOAD_DELAY = 3
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'partners_directory.middlewares.PartnersDirectoryDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    # 'partners_directory.middlewares.PartnersDirectoryDownloaderMiddleware': 543,
+    'scrapy_selenium.SeleniumMiddleware': 800,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
