@@ -2,6 +2,8 @@
 import scrapy
 
 from scrapy_selenium import SeleniumRequest
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class PartnerDirSpider(scrapy.Spider):
@@ -12,10 +14,17 @@ class PartnerDirSpider(scrapy.Spider):
     def start_requests(self):
         yield SeleniumRequest(
             url=self.start_urls[0],
-            callback=self.parse
+            callback=self.parse,
+            wait_time=10,
+            wait_until=EC.presence_of_element_located((By.CSS_SELECTOR, '.search-results'))
         )
 
     def parse(self, response):
         print(response)
         print(response.meta)
-        
+
+        titles = response.css('.display-name::text').getall()
+        titles = [title.strip() for title in titles]
+
+        print(len(titles))
+        print(titles)
