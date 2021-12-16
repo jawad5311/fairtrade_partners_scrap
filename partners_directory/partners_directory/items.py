@@ -15,3 +15,6 @@ class PartnersDirectoryItem(scrapy.Item):
     marketing_cat = scrapy.Field()
     FTUSA_id = scrapy.Field()
     FLO_id = scrapy.Field()
+    website = scrapy.Field()
+    phone = scrapy.Field()
+    email = scrapy.Field()

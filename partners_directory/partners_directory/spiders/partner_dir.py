@@ -1,6 +1,7 @@
 import time
 
 import scrapy
+import selenium
 
 from scrapy_selenium import SeleniumRequest
 from selenium.webdriver.common.by import By
@@ -15,38 +16,37 @@ class PartnerDirSpider(scrapy.Spider):
     name = 'partner_dir'
     allowed_domains = ['fairtradecertified.org']
     start_urls = ['https://partner.fairtradecertified.org/directory/results']
+    driver = selenium.webdriver.Chrome('E:\webdriver\chromedriver.exe')
 
     def start_requests(self):
-        yield SeleniumRequest(
-            url=self.start_urls[0],
-            callback=self.parse,
-            wait_time=30,
-            wait_until=EC.presence_of_element_located((By.CSS_SELECTOR, '.search-results'))
-        )
+        yield scrapy.Request(self.start_urls[0])
 
     def parse(self, response):
-        # Driver object selected from response meta data
-        driver = response.meta['driver']
+        # self.driver.get(self.start_urls[0])
+        self.driver.get(response.url)
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, '.search-results')
+            )
+        )
 
-        companies_len = driver.find_elements(By.CLASS_NAME, 'profile')
+        companies_len = self.driver.find_elements(By.CLASS_NAME, 'profile')
         print('COMPANIES LENGTH: ', len(companies_len))
 
-        # if len(companies_len) == 25:
-        #     # Select drop down menu & click 100 results per page
-        #     drop_down_menu = driver.find_element(By.CSS_SELECTOR, '.page-size-container')
-        #     drop_down_menu.find_element(By.CSS_SELECTOR, 'a').click()
-        #     drop_down_menu.find_element(By.CSS_SELECTOR, 'ul li:last-child').click()
-        #
-        #     WebDriverWait(driver, 60).until(
-        #         EC.presence_of_element_located(
-        #             (By.CSS_SELECTOR, '.profile:nth-child(26)')
-        #         )
-        #     )
+        if len(companies_len) == 25:
+            # Select drop down menu & click 100 results per page
+            dd_menu = self.driver.find_element(By.CSS_SELECTOR, '.page-size-container')
+            dd_menu.find_element(By.CSS_SELECTOR, 'a').click()
+            dd_menu.find_element(By.CSS_SELECTOR, 'ul li:last-child').click()
 
-        # companies_len = driver.find_elements(By.CLASS_NAME, 'profile')
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, '.profile:nth-child(26)')
+                )
+            )
 
         # Converting selenium page source to scrapy selector
-        sel = scrapy.selector.Selector(text=driver.page_source)
+        sel = scrapy.selector.Selector(text=self.driver.page_source)
 
         # Grabbing all the profiles
         profiles = sel.css('.profile')
@@ -66,8 +66,6 @@ class PartnerDirSpider(scrapy.Spider):
             FTUSA_id = self._strip_str(FTUSA_id)
             FLO_id = self._strip_str(FLO_id)
 
-            # print('PROFILE: ', title, country.upper(), category, marketing_cat, FTUSA_id, FLO_id)
-
             profile_url = profile.css('.view-profile::attr(href)').get()
             if profile_url:
                 profile_url = f'https://partner.fairtradecertified.org{profile_url}'
@@ -86,10 +84,7 @@ class PartnerDirSpider(scrapy.Spider):
                     }
                 )
             else:
-                l = ItemLoader(
-                    item=PartnersDirectoryItem(),
-                    selector=response
-                )
+                l = ItemLoader(item=PartnersDirectoryItem())
 
                 l.add_value('title', title)
                 l.add_value('country', country)
@@ -100,20 +95,8 @@ class PartnerDirSpider(scrapy.Spider):
 
                 yield l.load_item()
 
-        # titles = sel.css('.display-name::text').getall()
-        # titles = [title.strip() for title in titles]
-        #
-        # print(len(titles))
-        # print(titles)
-
-        time.sleep(5)
-
     def parse_profile(self, response):
-        # print(response.meta)
-        l = ItemLoader(
-            item=PartnersDirectoryItem(),
-            selector=response
-        )
+        l = ItemLoader(item=PartnersDirectoryItem())
 
         title = response.meta['title']
         country = response.meta['country']
@@ -121,6 +104,9 @@ class PartnerDirSpider(scrapy.Spider):
         marketing_cat = response.meta['marketing_cat']
         FTUSA_id = response.meta['FTUSA_id']
         FLO_id = response.meta['FLO_id']
+        website = response.css('.website a::attr(href)').get()
+        phone = response.xpath('//*[@fieldtype="tel"]/div/span//text()').get()
+        email = response.xpath('//*[@fieldtype="email"]/div/a//text()').get()
 
         l.add_value('title', title)
         l.add_value('country', country)
@@ -128,9 +114,11 @@ class PartnerDirSpider(scrapy.Spider):
         l.add_value('marketing_cat', marketing_cat)
         l.add_value('FTUSA_id', FTUSA_id)
         l.add_value('FLO_id', FLO_id)
+        l.add_value('website', website)
+        l.add_value('phone', phone)
+        l.add_value('email', email)
 
         yield l.load_item()
-
 
     @staticmethod
     def _strip_str(str_data: str):
