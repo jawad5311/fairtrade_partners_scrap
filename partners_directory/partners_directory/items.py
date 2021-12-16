@@ -9,4 +9,9 @@ import scrapy
 class PartnersDirectoryItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    pass
+    title = scrapy.Field()
+    country = scrapy.Field()
+    category = scrapy.Field()
+    marketing_cat = scrapy.Field()
+    FTUSA_id = scrapy.Field()
+    FLO_id = scrapy.Field()

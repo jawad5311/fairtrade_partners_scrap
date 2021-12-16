@@ -7,6 +7,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from ..items import PartnersDirectoryItem
+from scrapy.loader import ItemLoader
+
 
 class PartnerDirSpider(scrapy.Spider):
     name = 'partner_dir'
@@ -83,7 +86,19 @@ class PartnerDirSpider(scrapy.Spider):
                     }
                 )
             else:
-                pass
+                l = ItemLoader(
+                    item=PartnersDirectoryItem(),
+                    selector=response
+                )
+
+                l.add_value('title', title)
+                l.add_value('country', country)
+                l.add_value('category', category)
+                l.add_value('marketing_cat', marketing_cat)
+                l.add_value('FTUSA_id', FTUSA_id)
+                l.add_value('FLO_id', FLO_id)
+
+                yield l.load_item()
 
         # titles = sel.css('.display-name::text').getall()
         # titles = [title.strip() for title in titles]
@@ -93,10 +108,28 @@ class PartnerDirSpider(scrapy.Spider):
 
         time.sleep(5)
 
-
     def parse_profile(self, response):
-        print(response.meta)
+        # print(response.meta)
+        l = ItemLoader(
+            item=PartnersDirectoryItem(),
+            selector=response
+        )
 
+        title = response.meta['title']
+        country = response.meta['country']
+        category = response.meta['category']
+        marketing_cat = response.meta['marketing_cat']
+        FTUSA_id = response.meta['FTUSA_id']
+        FLO_id = response.meta['FLO_id']
+
+        l.add_value('title', title)
+        l.add_value('country', country)
+        l.add_value('category', category)
+        l.add_value('marketing_cat', marketing_cat)
+        l.add_value('FTUSA_id', FTUSA_id)
+        l.add_value('FLO_id', FLO_id)
+
+        yield l.load_item()
 
 
     @staticmethod
