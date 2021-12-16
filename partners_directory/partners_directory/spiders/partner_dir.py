@@ -1,3 +1,4 @@
+import time
 
 import scrapy
 
@@ -15,7 +16,7 @@ class PartnerDirSpider(scrapy.Spider):
         yield SeleniumRequest(
             url=self.start_urls[0],
             callback=self.parse,
-            wait_time=10,
+            wait_time=30,
             wait_until=EC.presence_of_element_located((By.CSS_SELECTOR, '.search-results'))
         )
 
@@ -28,3 +29,13 @@ class PartnerDirSpider(scrapy.Spider):
 
         print(len(titles))
         print(titles)
+
+        # Driver object selected from response meta data
+        driver = response.meta['driver']
+
+        # Select drop down menu & click 100 results per page
+        drop_down_menu = driver.find_element(By.CSS_SELECTOR, '.page-size-container')
+        drop_down_menu.find_element(By.CSS_SELECTOR, 'a').click()
+        drop_down_menu.find_element(By.CSS_SELECTOR, 'ul li:last-child').click()
+
+        time.sleep(5)

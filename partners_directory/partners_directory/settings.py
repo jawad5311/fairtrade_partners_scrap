@@ -21,7 +21,7 @@ NEWSPIDER_MODULE = 'partners_directory.spiders'
 # Selenium Webdriver Settings
 SELENIUM_DRIVER_NAME = 'chrome'
 SELENIUM_DRIVER_EXECUTABLE_PATH = 'E:\webdriver\chromedriver.exe'
-SELENIUM_DRIVER_ARGUMENTS = ['--headless']
+SELENIUM_DRIVER_ARGUMENTS = []
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'partners_directory (+http://www.yourdomain.com)'
