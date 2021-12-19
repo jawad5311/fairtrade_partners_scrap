@@ -14,7 +14,7 @@ from scrapy.loader import ItemLoader
 
 class PartnerDirSpider(scrapy.Spider):
     name = 'partner_dir'
-    allowed_domains = ['fairtradecertified.org']
+    allowed_domains = ['fairtradecertified.org', 'httpbin.org']
     start_urls = ['https://partner.fairtradecertified.org/directory/results']
     driver = selenium.webdriver.Chrome('E:\webdriver\chromedriver.exe')
 
@@ -69,11 +69,16 @@ class PartnerDirSpider(scrapy.Spider):
             profile_url = profile.css('.view-profile::attr(href)').get()
             if profile_url:
                 profile_url = f'https://partner.fairtradecertified.org{profile_url}'
-                print('URL: ', profile_url)
+            else:
+                profile_url = 'https://httpbin.org/ip'
 
-                yield SeleniumRequest(
+            print('URL: ', profile_url)
+
+            yield SeleniumRequest(
                     url=profile_url,
                     callback=self.parse_profile,
+                    dont_filter=True,
+                    # wait_time=5,
                     meta={
                         'title': title,
                         'country': country,
@@ -83,19 +88,42 @@ class PartnerDirSpider(scrapy.Spider):
                         'FLO_id': FLO_id,
                     }
                 )
-            else:
-                l = ItemLoader(item=PartnersDirectoryItem())
 
-                l.add_value('title', title)
-                l.add_value('country', country)
-                l.add_value('category', category)
-                l.add_value('marketing_cat', marketing_cat)
-                l.add_value('FTUSA_id', FTUSA_id)
-                l.add_value('FLO_id', FLO_id)
-
-                yield l.load_item()
+        # if profile_url:
+            #     profile_url = f'https://partner.fairtradecertified.org{profile_url}'
+            #     print('URL: ', profile_url)
+            #
+            #     yield SeleniumRequest(
+            #         url=profile_url,
+            #         callback=self.parse_profile,
+            #         # wait_time=5,
+            #         meta={
+            #             'title': title,
+            #             'country': country,
+            #             'category': category,
+            #             'marketing_cat': marketing_cat,
+            #             'FTUSA_id': FTUSA_id,
+            #             'FLO_id': FLO_id,
+            #         }
+            #     )
+            # else:
+            #     l = ItemLoader(item=PartnersDirectoryItem())
+            #
+            #     l.add_value('title', title)
+            #     l.add_value('country', country)
+            #     l.add_value('category', category)
+            #     l.add_value('marketing_cat', marketing_cat)
+            #     l.add_value('FTUSA_id', FTUSA_id)
+            #     l.add_value('FLO_id', FLO_id)
+            #     l.add_value('website', '')
+            #     l.add_value('phone', '')
+            #     l.add_value('email', '')
+            #
+            #     yield l.load_item()
 
     def parse_profile(self, response):
+        driver = response.meta['driver']
+        sel = response.replace(body=driver.page_source)
         l = ItemLoader(item=PartnersDirectoryItem())
 
         title = response.meta['title']
@@ -104,9 +132,15 @@ class PartnerDirSpider(scrapy.Spider):
         marketing_cat = response.meta['marketing_cat']
         FTUSA_id = response.meta['FTUSA_id']
         FLO_id = response.meta['FLO_id']
-        website = response.css('.website a::attr(href)').get()
-        phone = response.xpath('//*[@fieldtype="tel"]/div/span//text()').get()
-        email = response.xpath('//*[@fieldtype="email"]/div/a//text()').get()
+        website = sel.css('.website a::attr(href)').get()
+        website = self._strip_str(website)
+        print('WEBSITE: ', website)
+        phone = sel.xpath('//*[@fieldtype="tel"]/div/span//text()').get()
+        phone = self._strip_str(phone)
+        print('PHONE: ', phone)
+        email = sel.xpath('//*[@fieldtype="email"]/div/a//text()').get()
+        email = self._strip_str(email)
+        print('EMAIL: ', email)
 
         l.add_value('title', title)
         l.add_value('country', country)
@@ -118,7 +152,12 @@ class PartnerDirSpider(scrapy.Spider):
         l.add_value('phone', phone)
         l.add_value('email', email)
 
+        time.sleep(2)
+
         yield l.load_item()
+
+    def spider_closed(self, spider):
+        self.driver.close()
 
     @staticmethod
     def _strip_str(str_data: str):
