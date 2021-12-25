@@ -2,6 +2,9 @@
 import scrapy
 
 from scrapy_selenium import SeleniumRequest
+from scrapy.loader import ItemLoader
+
+from ..items import PartnersDirectoryItem
 
 
 class PartnerDirApiSpider(scrapy.Spider):
@@ -13,11 +16,11 @@ class PartnerDirApiSpider(scrapy.Spider):
     def parse(self, response):
         profiles = response.json()['accounts']
         for profile in profiles:
-            name = profile['Marketing_Display_Name__c']
+            title = profile['Marketing_Display_Name__c']
             country = profile['BillingCountry']
             ftusa_id = profile['FLO_ID__c']
             flo_id = profile['FLO_ID_Supplier__c']
-            account_type = profile['Account_Type__c']
+            account_cat = profile['Account_Type__c']
             marketing_cat = profile['Account_Marketing_Categories__c']
 
             profile_available = profile['Slug']
@@ -28,29 +31,41 @@ class PartnerDirApiSpider(scrapy.Spider):
                     url=url,
                     callback=self.parse_profile,
                     meta={
-                        'name': name,
+                        'title': title,
                         'country': country,
                         'ftusa_id': ftusa_id,
                         'flo_id': flo_id,
-                        'account_type': account_type,
+                        'account_cat': account_cat,
                         'marketing_cat': marketing_cat,
                 }
                 )
             else:
-                yield {
-                    'name': name,
-                    'country': country,
-                    'ftusa_id': ftusa_id,
-                    'flo_id': flo_id,
-                    'account_type': account_type,
-                    'marketing_cat': marketing_cat,
-                    'email': '',
-                    'phone': '',
-                    'facebook': '',
-                    'billing_country': '',
-                    'website': '',
-                    'name_2': ''
-                }
+                l = ItemLoader(item=PartnersDirectoryItem())
+                l.add_value('title', title)
+                l.add_value('country', country)
+                l.add_value('account_cat', account_cat)
+                l.add_value('marketing_cat', marketing_cat)
+                l.add_value('ftusa_id', ftusa_id)
+                l.add_value('flo_id', flo_id)
+                l.add_value('website', '')
+                l.add_value('phone', '')
+                l.add_value('email', '')
+                yield l.load_item()
+
+                # yield {
+                #     'title': title,
+                #     'country': country,
+                #     'ftusa_id': ftusa_id,
+                #     'flo_id': flo_id,
+                #     'account_cat': account_cat,
+                #     'marketing_cat': marketing_cat,
+                #     'email': '',
+                #     'phone': '',
+                #     'facebook': '',
+                #     'billing_country': '',
+                #     'website': '',
+                #     'name_2': ''
+                # }
 
         # if profiles:
         #     self.page_num += 1
@@ -67,39 +82,53 @@ class PartnerDirApiSpider(scrapy.Spider):
         # sel = response.replace(body=driver.page_source)
         # print('PROFILE NAME: ', sel.css('.profile-name::text').get())
 
+        l = ItemLoader(item=PartnersDirectoryItem())
+
         data = response.json()
         # print('KEYS: ', data.keys())
 
-        name = response.meta['name']
+        title = response.meta['title']
         country = response.meta['country']
         ftusa_id = response.meta['ftusa_id']
         flo_id = response.meta['flo_id']
-        account_type = response.meta['account_type']
+        account_cat = response.meta['account_cat']
         marketing_cat = response.meta['marketing_cat']
 
         email = data['profile']['General_Contact_E_mail__c']
         phone = data['profile']['General_Contact_Phone_Number__c']
-        facebook = data['account']['Facebook__c']
-        billing_country = data['account']['BillingCountry']
+        # facebook = data['account']['Facebook__c']
+        # billing_country = data['account']['BillingCountry']
         website = data['account']['Website']
-        name_2 = data['account']['Marketing_Display_Name__c']
+        # name_2 = data['account']['Marketing_Display_Name__c']
 
         print('email: ', email)
         print('phone: ', phone)
-        print('facebook: ', facebook)
-        print('billing_country: ', billing_country)
+        # print('facebook: ', facebook)
+        # print('billing_country: ', billing_country)
 
-        yield {
-            'name': name,
-            'country': country,
-            'ftusa_id': ftusa_id,
-            'flo_id': flo_id,
-            'account_type': account_type,
-            'marketing_cat': marketing_cat,
-            'email': email,
-            'phone': phone,
-            'facebook': facebook,
-            'billing_country': billing_country,
-            'website': website,
-            'name_2': name_2,
-        }
+        l.add_value('title', title)
+        l.add_value('country', country)
+        l.add_value('account_cat', account_cat)
+        l.add_value('marketing_cat', marketing_cat)
+        l.add_value('ftusa_id', ftusa_id)
+        l.add_value('flo_id', flo_id)
+        l.add_value('website', website)
+        l.add_value('phone', phone)
+        l.add_value('email', email)
+
+        return l.load_item()
+
+        # yield {
+        #     'title': title,
+        #     'country': country,
+        #     'ftusa_id': ftusa_id,
+        #     'flo_id': flo_id,
+        #     'account_cat': account_cat,
+        #     'marketing_cat': marketing_cat,
+        #     'email': email,
+        #     'phone': phone,
+        #     # 'facebook': facebook,
+        #     # 'billing_country': billing_country,
+        #     'website': website,
+        #     # 'name_2': name_2,
+        # }
