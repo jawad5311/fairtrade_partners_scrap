@@ -55,15 +55,15 @@ class PartnerDirApiSpider(scrapy.Spider):
                 l.add_value('email', '')
                 yield l.load_item()
 
-        # # Handling pagination
-        # if profiles:
-        #     self.page_num += 1  #
-        #     print('PAGE NUMBER: ', self.page_num)
-        #     next_url = f'https://partner.fairtradecertified.org/directory/account/get?hasProfile=false&page={self.page_num}&perPage=100'
-        #     yield scrapy.Request(
-        #         url=next_url,
-        #         callback=self.parse
-        #     )
+        # Handling pagination
+        if profiles:
+            self.page_num += 1  #
+            print('PAGE NUMBER: ', self.page_num)
+            next_url = f'https://partner.fairtradecertified.org/directory/account/get?hasProfile=false&page={self.page_num}&perPage=100'
+            yield scrapy.Request(
+                url=next_url,
+                callback=self.parse
+            )
 
     @staticmethod
     def parse_profile(response):
@@ -81,9 +81,9 @@ class PartnerDirApiSpider(scrapy.Spider):
         marketing_cat = response.meta['marketing_cat']
 
         # Grabbing data from the json
-        email = data['profile']['General_Contact_E_mail__c']
-        phone = data['profile']['General_Contact_Phone_Number__c']
-        website = data['account']['Website']
+        email = data['profile'].get('General_Contact_E_mail__c')
+        phone = data['profile'].get('General_Contact_Phone_Number__c')
+        website = data['account'].get('Website')
 
         # loading data into relevant item fields
         l.add_value('title', title)
