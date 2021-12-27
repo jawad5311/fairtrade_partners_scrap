@@ -12,7 +12,9 @@ import sqlite3
 
 class PartnersDirectoryPipeline:
     def __init__(self):
-        self.curr = sqlite3.connect('fairtrade.db').cursor()
+        self.conn = sqlite3.connect('fairtrade.db')
+        self.curr = self.conn.cursor()
+        self.create_table()
 
     def create_table(self):
         self.curr.execute(
@@ -33,5 +35,24 @@ class PartnersDirectoryPipeline:
             """
         )
 
+    def store_db(self, item):
+        self.curr.execute(
+            """
+                insert into fairtrade_partners values (?,?,?,?,?,?,?,?,?)
+            """,(
+                item['title'][0],
+                item['country'][0],
+                item['account_cat'][0],
+                item['marketing_cat'][0],
+                item['ftusa_id'][0],
+                item['flo_id'][0],
+                item.get('website')[0],
+                item.get('phone')[0],
+                item.get('email')[0],
+            )
+        )
+        self.conn.commit()
+
     def process_item(self, item, spider):
+        self.store_db(item)
         return item

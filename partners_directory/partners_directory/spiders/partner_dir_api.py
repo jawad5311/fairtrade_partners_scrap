@@ -55,15 +55,15 @@ class PartnerDirApiSpider(scrapy.Spider):
                 l.add_value('email', '')
                 yield l.load_item()
 
-        # Handling pagination
-        if profiles:
-            self.page_num += 1  #
-            print('PAGE NUMBER: ', self.page_num)
-            next_url = f'https://partner.fairtradecertified.org/directory/account/get?hasProfile=false&page={self.page_num}&perPage=100'
-            yield scrapy.Request(
-                url=next_url,
-                callback=self.parse
-            )
+        # # Handling pagination
+        # if profiles:
+        #     self.page_num += 1  #
+        #     print('PAGE NUMBER: ', self.page_num)
+        #     next_url = f'https://partner.fairtradecertified.org/directory/account/get?hasProfile=false&page={self.page_num}&perPage=100'
+        #     yield scrapy.Request(
+        #         url=next_url,
+        #         callback=self.parse
+        #     )
 
     @staticmethod
     def parse_profile(response):

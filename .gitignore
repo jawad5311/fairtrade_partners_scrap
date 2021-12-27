@@ -1,3 +1,4 @@
+*.db
 *.csv
 chrome_driver/
 *.xlsx

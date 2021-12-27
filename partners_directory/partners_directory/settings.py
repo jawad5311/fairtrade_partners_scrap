@@ -18,10 +18,10 @@ BOT_NAME = 'partners_directory'
 SPIDER_MODULES = ['partners_directory.spiders']
 NEWSPIDER_MODULE = 'partners_directory.spiders'
 
-# Selenium Webdriver Settings
-SELENIUM_DRIVER_NAME = 'chrome'
-SELENIUM_DRIVER_EXECUTABLE_PATH = 'E:\webdriver\chromedriver.exe'
-SELENIUM_DRIVER_ARGUMENTS = []
+# # Selenium Webdriver Settings
+# SELENIUM_DRIVER_NAME = 'chrome'
+# SELENIUM_DRIVER_EXECUTABLE_PATH = 'E:\webdriver\chromedriver.exe'
+# SELENIUM_DRIVER_ARGUMENTS = []
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'partners_directory (+http://www.yourdomain.com)'
@@ -63,7 +63,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     # 'partners_directory.middlewares.PartnersDirectoryDownloaderMiddleware': 543,
-    'scrapy_selenium.SeleniumMiddleware': 800,
+    # 'scrapy_selenium.SeleniumMiddleware': 800,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
@@ -87,9 +87,9 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'partners_directory.pipelines.PartnersDirectoryPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'partners_directory.pipelines.PartnersDirectoryPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
