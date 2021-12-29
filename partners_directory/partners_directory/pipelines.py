@@ -9,6 +9,8 @@ from itemadapter import ItemAdapter
 
 import sqlite3
 
+from quickstart import main
+
 
 class PartnersDirectoryPipeline:
     def __init__(self):
@@ -17,6 +19,10 @@ class PartnersDirectoryPipeline:
         self.curr = self.conn.cursor()  # creates cursor for query executions
         self.create_table()  # Creates table in database
 
+        # Creates connection to Google Sheet API
+        self.service = main()
+
+    """The following code is used to store data in database"""
     def create_table(self):
         # Drops the table if it already exists
         self.curr.execute(
@@ -43,7 +49,7 @@ class PartnersDirectoryPipeline:
         self.curr.execute(
             """
                 insert into fairtrade_partners values (?,?,?,?,?,?,?,?,?)
-            """,(
+            """, (
                 item.get('title'),
                 item.get('country'),
                 item.get('account_cat'),
@@ -56,6 +62,8 @@ class PartnersDirectoryPipeline:
             )
         )
         self.conn.commit()  # commit all the changes to the database
+
+    """The following code is used to store data in Google Sheets"""
 
     def process_item(self, item, spider):
         self.store_db(item)

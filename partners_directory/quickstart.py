@@ -9,12 +9,16 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/contacts.readonly']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+# The ID and range of a sample spreadsheet.
+SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+SAMPLE_RANGE_NAME = 'Class Data!A2:E'
 
 
 def main():
-    """Shows basic usage of the People API.
-    Prints the name of the first 10 connections.
+    """Shows basic usage of the Sheets API.
+    Prints values from a sample spreadsheet.
     """
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -35,21 +39,24 @@ def main():
             token.write(creds.to_json())
 
     try:
-        service = build('people', 'v1', credentials=creds)
+        service = build('sheets', 'v4', credentials=creds)
 
-        # Call the People API
-        print('List 10 connection names')
-        results = service.people().connections().list(
-            resourceName='people/me',
-            pageSize=10,
-            personFields='names,emailAddresses').execute()
-        connections = results.get('connections', [])
+        # Call the Sheets API
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                                    range=SAMPLE_RANGE_NAME).execute()
+        values = result.get('values', [])
 
-        for person in connections:
-            names = person.get('names', [])
-            if names:
-                name = names[0].get('displayName')
-                print(name)
+        if not values:
+            print('No data found.')
+            return
+
+        print('Name, Major:')
+
+        return service
+        # for row in values:
+        #     # Print columns A and E, which correspond to indices 0 and 4.
+        #     print('%s, %s' % (row[0], row[4]))
     except HttpError as err:
         print(err)
 
