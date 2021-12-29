@@ -9,7 +9,10 @@ from itemadapter import ItemAdapter
 
 import sqlite3
 
+from scrapy.utils.project import get_project_settings
+
 from quickstart import main
+from partners_directory.spiders.partner_dir_api import PartnerDirApiSpider
 
 
 class PartnersDirectoryPipeline:
@@ -21,6 +24,25 @@ class PartnersDirectoryPipeline:
 
         # Creates connection to Google Sheet API
         self.service = main()
+
+    def create_spreadsheet(self):
+        project_name = get_project_settings().get('BOT_NAME')
+
+        spider_name = PartnerDirApiSpider.name
+
+        sheet_body = {
+            'properties': {
+                'title': project_name,
+                'locale': 'en_US',
+                'timeZone': 'Etc/GMT',
+                'autoRecalc': 'HOUR'
+            },
+            'sheets': [{'properties': {'title': spider_name}}]
+        }
+
+        self.service.spreadsheet().create(
+            body=sheet_body
+        ).execute()
 
     """The following code is used to store data in database"""
     def create_table(self):
