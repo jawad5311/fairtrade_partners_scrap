@@ -8,11 +8,13 @@
 from itemadapter import ItemAdapter
 
 import sqlite3
+import pandas as pd
 
 from scrapy.utils.project import get_project_settings
 
 from quickstart import main
 from partners_directory.spiders.partner_dir_api import PartnerDirApiSpider
+from partners_directory.items import PartnersDirectoryItem
 
 
 class PartnersDirectoryPipeline:
@@ -23,11 +25,18 @@ class PartnersDirectoryPipeline:
         self.create_table()  # Creates table in database
 
         # Creates connection to Google Sheet API
-        self.service = main()
+        # self.service = main()
+        columns = PartnersDirectoryItem().fields.keys()  #
+        self.df = pd.DataFrame([], columns=columns)
+
+    """
+    The following code is used to store data in Google Sheets
+    """
 
     def create_spreadsheet(self):
-        project_name = get_project_settings().get('BOT_NAME')
+        """Creates Google Sheet using project and spider name"""
 
+        project_name = get_project_settings().get('BOT_NAME')
         spider_name = PartnerDirApiSpider.name
 
         sheet_body = {
@@ -40,11 +49,33 @@ class PartnersDirectoryPipeline:
             'sheets': [{'properties': {'title': spider_name}}]
         }
 
-        self.service.spreadsheet().create(
+        self.service.spreadsheets().create(
             body=sheet_body
         ).execute()
 
+    def append_data_to_df(self, item):
+        self.df = self.df.append({
+            'account_cat': item.get('account_cat'),
+            'country': item.get('country'),
+            'email': item.get('email'),
+            'flo_id': item.get('flo_id'),
+            'ftusa_id': item.get('ftusa_id'),
+            'marketing_cat': item.get('marketing_cat'),
+            'phone': item.get('phone'),
+            'title': item.get('title'),
+            'website': item.get('website'),
+        },
+            ignore_index=True)
+
+    def close_spider(self, spider):
+        columns = PartnersDirectoryItem().fields.keys()  #
+        print(columns)
+        print(self.df)
+        # self.df.to_csv('close_spider.csv',
+        #                index=False)
+
     """The following code is used to store data in database"""
+
     def create_table(self):
         # Drops the table if it already exists
         self.curr.execute(
@@ -85,8 +116,7 @@ class PartnersDirectoryPipeline:
         )
         self.conn.commit()  # commit all the changes to the database
 
-    """The following code is used to store data in Google Sheets"""
-
     def process_item(self, item, spider):
-        self.store_db(item)
+        self.append_data_to_df(item)
+        # self.store_db(item)
         return item
