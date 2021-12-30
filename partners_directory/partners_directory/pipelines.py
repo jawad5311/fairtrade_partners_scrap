@@ -25,36 +25,15 @@ class PartnersDirectoryPipeline:
         self.curr = self.conn.cursor()  # creates cursor for query executions
         self.create_table()  # Creates table in database
 
-        # Creates connection to Google Sheet API
-        # self.service = main()
-        columns = PartnersDirectoryItem().fields.keys()  #
-        self.df = pd.DataFrame([], columns=columns)
+        # Creates an empty df with item fields as column
+        columns = PartnersDirectoryItem().fields.keys()  # grabs items fields as list
+        self.df = pd.DataFrame([], columns=columns)  # Creates an empty dataframe
 
     """
     The following code is used to store data in Google Sheets
     """
-
-    def create_spreadsheet(self):
-        """Creates Google Sheet using project and spider name"""
-
-        project_name = get_project_settings().get('BOT_NAME')
-        spider_name = PartnerDirApiSpider.name
-
-        sheet_body = {
-            'properties': {
-                'title': project_name,
-                'locale': 'en_US',
-                'timeZone': 'Etc/GMT',
-                'autoRecalc': 'HOUR'
-            },
-            'sheets': [{'properties': {'title': spider_name}}]
-        }
-
-        self.service.spreadsheets().create(
-            body=sheet_body
-        ).execute()
-
     def append_data_to_df(self, item):
+        """Append each item to the dataframe"""
         self.df = self.df.append({
             'account_cat': item.get('account_cat'),
             'country': item.get('country'),
@@ -69,25 +48,33 @@ class PartnersDirectoryPipeline:
             ignore_index=True)
 
     def add_data_to_gsheet(self):
-
+        """Upload created dataframe to the google sheets"""
+        # scrapy project name, to be used as spreadsheet title
         project_name = get_project_settings().get('BOT_NAME')
+        # spider name, to be used as worksheet title
         spider_name = PartnerDirApiSpider.name
 
+        # Creates connection to google sheets api
         conn = pygsheets.authorize(client_secret='credentials.json')
-        sheet = conn.create(project_name)
-        work_sheet = sheet.sheet1
+        sheet = conn.create(project_name)  # Creates a spreadsheet
+        work_sheet = sheet.add_worksheet(spider_name)  # Creates new worksheet
+        # Upload dataframe to the selected worksheet
         work_sheet.set_dataframe(
-            df=self.df,
-            start=(1, 1)
+            df=self.df,  # Dataframe to be updated
+            start=(1, 1)  # Range from where the data should be start inserted
         )
         print('Google sheet created successfully!')
+        sheet.del_worksheet(sheet.sheet1)  # Deletes default worksheet
 
     def close_spider(self, spider):
+        """This method is called automatically when spider finish crawling"""
         self.add_data_to_gsheet()
 
-    """The following code is used to store data in database"""
-
+    """
+    The following code is used to store data in database
+    """
     def create_table(self):
+        """Creates a table in the connected database"""
         # Drops the table if it already exists
         self.curr.execute(
             """DROP TABLE IF EXISTS fairtrade_partners"""
@@ -109,6 +96,7 @@ class PartnersDirectoryPipeline:
         )
 
     def store_db(self, item):
+        """Store data to the database"""
         # store scrapped data in the connected database
         self.curr.execute(
             """
