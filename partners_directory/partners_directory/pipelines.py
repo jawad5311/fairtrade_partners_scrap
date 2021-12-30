@@ -8,6 +8,7 @@
 from itemadapter import ItemAdapter
 
 import sqlite3
+import pygsheets
 import pandas as pd
 
 from scrapy.utils.project import get_project_settings
@@ -67,12 +68,22 @@ class PartnersDirectoryPipeline:
         },
             ignore_index=True)
 
+    def add_data_to_gsheet(self):
+
+        project_name = get_project_settings().get('BOT_NAME')
+        spider_name = PartnerDirApiSpider.name
+
+        conn = pygsheets.authorize(client_secret='credentials.json')
+        sheet = conn.create(project_name)
+        work_sheet = sheet.sheet1
+        work_sheet.set_dataframe(
+            df=self.df,
+            start=(1, 1)
+        )
+        print('Google sheet created successfully!')
+
     def close_spider(self, spider):
-        columns = PartnersDirectoryItem().fields.keys()  #
-        print(columns)
-        print(self.df)
-        # self.df.to_csv('close_spider.csv',
-        #                index=False)
+        self.add_data_to_gsheet()
 
     """The following code is used to store data in database"""
 
